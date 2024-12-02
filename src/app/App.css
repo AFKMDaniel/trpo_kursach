@@ -2,6 +2,7 @@
 @import 'tailwindcss/components';
 @import '../assets/primevue/tailwind.css';
 @import 'tailwindcss/utilities';
+@import 'primeicons/primeicons.css';
 
 /* Primary and Surface Palettes */
 :root {
