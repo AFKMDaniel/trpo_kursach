@@ -87,7 +87,7 @@ const noteToEdit = computed(() => {
 });
 
 const tagsArray = computed(() => {
-  return Object.keys(tags.value);
+  return tags.value.map((tag) => tag.name);
 });
 
 const label = ref('');

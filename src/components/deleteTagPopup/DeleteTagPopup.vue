@@ -3,11 +3,11 @@
     :visible="visible || false"
     @update:visible="emit('close')"
     modal
-    header="Удалить тег"
+    header="Удалить теги"
     :style="{ width: '25rem' }"
   >
     <span class="mb-8 block text-surface-500 dark:text-surface-400"
-      >Вы уверены что хотите удалить выбранный тег?</span
+      >Вы уверены что хотите удалить выбранные теги?</span
     >
     <template #footer>
       <Button

@@ -8,10 +8,15 @@
     }"
   >
     <Checkbox
-      class="absolute right-2 transition-all"
+      v-show="allowToSelect"
+      class="absolute right-2 z-20 transition-all"
       :model-value="selected"
       binary
       @update:model-value="onToggle"
+    />
+    <div
+      class="pointer-events-none absolute bottom-0 left-0 right-0 top-0 z-10 rounded-xl bg-[var(--p-primary-color)]"
+      :class="{ 'opacity-0': !selected, 'opacity-50': selected }"
     />
     <draggable
       v-model="notes"
@@ -28,7 +33,7 @@
       :disabled="!isDragEnabled"
     >
       <template #header>
-        <div>{{ tag }}</div>
+        <div>{{ tag.name }}</div>
       </template>
       <template #item="{ element }">
         <NoteItem :note="element[0]" :selected="element[1]" />
@@ -44,31 +49,34 @@ import draggable from 'vuedraggable';
 import { Checkbox } from 'primevue';
 
 import { useNotesStore } from '@/store';
+import type { Tag } from '@/store/useNotesStore';
 
 import NoteItem from '../note/NoteItem.vue';
 
-const { tag, selected } = defineProps<{ tag: string; selected: boolean }>();
+const { tag, selected } = defineProps<{ tag: Tag; selected: boolean }>();
 
 const store = useNotesStore();
-const { tags, isDragEnabled } = storeToRefs(store);
+const { isDragEnabled, selectedNotes } = storeToRefs(store);
+
+const allowToSelect = computed(() => {
+  return selectedNotes.value.length === 0;
+});
 
 const notes = computed({
   get() {
-    return tags.value[tag].notes;
+    return tag.notes;
   },
 
   set(newValue) {
-    store.editTagNotes(tag, newValue);
+    store.editTagNotes(tag.name, newValue);
   },
 });
 
-const { selectTag, unselectTag } = useNotesStore();
-
 function onToggle() {
   if (!selected) {
-    selectTag(tag);
+    store.selectTag(tag.name);
   } else {
-    unselectTag(tag);
+    store.unselectTag(tag.name);
   }
 }
 </script>

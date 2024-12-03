@@ -25,6 +25,7 @@
       :class="{ 'opacity-0': !selected, 'opacity-50': selected }"
     />
     <Checkbox
+      v-show="allowToSelect"
       class="absolute right-2 transition-all"
       :model-value="selected"
       @update:model-value="onToggle"
@@ -34,6 +35,8 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import { storeToRefs } from 'pinia';
 import Checkbox from 'primevue/checkbox';
 
 import { Note } from './model';
@@ -45,13 +48,18 @@ interface NoteProps {
 }
 const { note, selected } = defineProps<NoteProps>();
 
-const { selectNote, unselectNote } = useNotesStore();
+const store = useNotesStore();
+const { selectedTags } = storeToRefs(store);
+
+const allowToSelect = computed(() => {
+  return selectedTags.value.length === 0;
+});
 
 function onToggle() {
   if (!selected) {
-    selectNote(note);
+    store.selectNote(note);
   } else {
-    unselectNote(note);
+    store.unselectNote(note);
   }
 }
 </script>

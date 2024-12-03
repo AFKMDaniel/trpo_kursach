@@ -4,17 +4,18 @@ import { defineStore } from 'pinia';
 
 import { Note } from '@/components/note/model';
 
-export type Tags = Record<
-  string,
-  {
-    notes: [Note, boolean][];
-    selected: boolean;
-  }
->;
+export type Tag = {
+  name: string;
+  notes: [Note, boolean][];
+  selected: boolean;
+};
+
+export type Tags = Tag[];
 
 export const useNotesStore = defineStore('tags', () => {
-  const tags = ref<Tags>({
-    '#без_тега': {
+  const tags = ref<Tags>([
+    {
+      name: '#без_тега',
       selected: false,
       notes: [
         [
@@ -43,7 +44,8 @@ export const useNotesStore = defineStore('tags', () => {
         ],
       ],
     },
-    '#бэклог_игр': {
+    {
+      name: '#бэклог_игр',
       selected: false,
       notes: [
         [
@@ -60,12 +62,12 @@ export const useNotesStore = defineStore('tags', () => {
         ],
       ],
     },
-  });
+  ]);
 
   const selectedNotes = computed(() => {
     const result: Note[] = [];
 
-    Object.values(tags.value).forEach((tag) =>
+    tags.value.forEach((tag) =>
       tag.notes.forEach((note) => {
         if (note[1]) {
           result.push(note[0]);
@@ -76,8 +78,12 @@ export const useNotesStore = defineStore('tags', () => {
     return result;
   });
 
+  const selectedTags = computed(() => {
+    return tags.value.filter((tag) => tag.selected).map((tag) => tag.name);
+  });
+
   const isDragEnabled = computed(() => {
-    return selectedNotes.value.length === 0;
+    return selectedNotes.value.length === 0 && selectedTags.value.length === 0;
   });
 
   const notesCount = computed(() => {
@@ -90,25 +96,25 @@ export const useNotesStore = defineStore('tags', () => {
     return result;
   });
 
-  const selectedTags = computed(() => {
-    return Object.entries(tags.value)
-      .filter(([, { selected }]) => selected)
-      .map(([key]) => key);
-  });
-
   function addTag(tagName: string) {
-    tags.value[tagName] = { notes: [], selected: false };
+    tags.value.push({ name: tagName, notes: [], selected: false });
   }
 
   function deleteTag(tagName: string) {
-    delete tags.value[tagName];
+    const index = tags.value.findIndex((tag) => tag.name === tagName);
+
+    if (index !== -1) {
+      tags.value.splice(index, 1);
+    }
   }
 
   function editTag(oldTagName: string, newTagName: string) {
-    const notes = tags.value[oldTagName];
-    delete tags.value[oldTagName];
+    const index = tags.value.findIndex((tag) => tag.name === oldTagName);
 
-    tags.value[newTagName] = notes;
+    if (index !== -1) {
+      tags.value[index].name = newTagName;
+      tags.value[index].notes.forEach((note) => (note[0].tag = newTagName));
+    }
   }
 
   function editTags(newTags: Tags) {
@@ -121,68 +127,102 @@ export const useNotesStore = defineStore('tags', () => {
       return note;
     });
 
-    tags.value[tagName].notes = notes;
+    const index = tags.value.findIndex((tag) => tag.name === tagName);
+
+    if (index !== -1) {
+      tags.value[index].notes = notes;
+    }
   }
 
   function addNote(note: Note) {
-    tags.value[note.tag].notes.push([note, false]);
+    const index = tags.value.findIndex((tag) => tag.name === note.tag);
+
+    if (index !== -1) {
+      tags.value[index].notes.push([note, false]);
+    }
   }
 
   function deleteNote(note: Note) {
-    const index = tags.value[note.tag].notes.findIndex(
-      (item) => item[0].id === note.id
-    );
+    const tagIndex = tags.value.findIndex((tag) => tag.name === note.tag);
 
-    if (index !== -1) {
-      tags.value[note.tag].notes.splice(index, 1);
+    if (tagIndex !== -1) {
+      const index = tags.value[tagIndex].notes.findIndex(
+        (item) => item[0].id === note.id
+      );
+
+      if (index !== -1) {
+        tags.value[tagIndex].notes.splice(index, 1);
+      }
     }
   }
 
   function editNote(note: Note) {
-    const index = tags.value[note.tag].notes.findIndex(
-      (item) => item[0].id === note.id
-    );
+    const tagIndex = tags.value.findIndex((tag) => tag.name === note.tag);
 
-    if (index !== -1) {
-      tags.value[note.tag].notes[index][0] = note;
+    if (tagIndex !== -1) {
+      const index = tags.value[tagIndex].notes.findIndex(
+        (item) => item[0].id === note.id
+      );
+
+      if (index !== -1) {
+        tags.value[tagIndex].notes[index][0] = note;
+      }
     }
   }
 
   function selectNote(note: Note) {
-    const index = tags.value[note.tag].notes.findIndex(
-      (item) => item[0].id === note.id
-    );
+    const tagIndex = tags.value.findIndex((tag) => tag.name === note.tag);
 
-    if (index !== -1) {
-      tags.value[note.tag].notes[index][1] = true;
+    if (tagIndex !== -1) {
+      const index = tags.value[tagIndex].notes.findIndex(
+        (item) => item[0].id === note.id
+      );
+
+      if (index !== -1) {
+        tags.value[tagIndex].notes[index][1] = true;
+      }
     }
   }
 
   function unselectNote(note: Note) {
-    const index = tags.value[note.tag].notes.findIndex(
-      (item) => item[0].id === note.id
-    );
+    const tagIndex = tags.value.findIndex((tag) => tag.name === note.tag);
 
-    if (index !== -1) {
-      tags.value[note.tag].notes[index][1] = false;
+    if (tagIndex !== -1) {
+      const index = tags.value[tagIndex].notes.findIndex(
+        (item) => item[0].id === note.id
+      );
+
+      if (index !== -1) {
+        tags.value[tagIndex].notes[index][1] = false;
+      }
     }
   }
 
   function clearSelection() {
-    Object.values(tags.value).map((tag) =>
+    tags.value.map((tag) => {
+      tag.selected = false;
       tag.notes.map((note) => {
         note[1] = false;
         return note;
-      })
-    );
+      });
+      return tag;
+    });
   }
 
   function selectTag(tagName: string) {
-    tags.value[tagName].selected = true;
+    const tagIndex = tags.value.findIndex((tag) => tag.name === tagName);
+
+    if (tagIndex !== -1) {
+      tags.value[tagIndex].selected = true;
+    }
   }
 
   function unselectTag(tagName: string) {
-    tags.value[tagName].selected = false;
+    const tagIndex = tags.value.findIndex((tag) => tag.name === tagName);
+
+    if (tagIndex !== -1) {
+      tags.value[tagIndex].selected = false;
+    }
   }
 
   return {

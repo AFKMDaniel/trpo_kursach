@@ -1,9 +1,9 @@
 <template>
   <Dialog
     :visible="visible || false"
-    @update:visible="emit('close')"
+    @update:visible="handleClose"
     modal
-    :header="tag ? 'Редактировать тег' : 'Добавить тег'"
+    :header="tagToEdit ? 'Редактировать тег' : 'Добавить тег'"
     :style="{ width: '25rem' }"
   >
     <div class="mb-4 flex items-center gap-2">
@@ -19,7 +19,7 @@
       <Button
         label="Отмена"
         severity="secondary"
-        @click="emit('close')"
+        @click="handleClose"
         autofocus
       />
       <Button label="Подтвердить" @click="handleSubmit" autofocus />
@@ -28,29 +28,43 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { storeToRefs } from 'pinia';
 import { Dialog, Button, InputText } from 'primevue';
 
 import { useNotesStore } from '@/store';
 
 interface DeleteNotesPopupProps {
   visible: boolean;
-  tag?: string;
 }
 
-const { visible, tag } = defineProps<DeleteNotesPopupProps>();
+const { visible } = defineProps<DeleteNotesPopupProps>();
 const emit = defineEmits(['close']);
 
 const store = useNotesStore();
+const { selectedTags } = storeToRefs(store);
 
-const name = ref(tag ?? '');
+const tagToEdit = computed(() => {
+  return selectedTags.value[0];
+});
+
+const name = ref('');
+
+watch(tagToEdit, () => {
+  name.value = tagToEdit.value;
+});
+
+function handleClose() {
+  name.value = '';
+  emit('close');
+}
 
 function handleSubmit() {
-  if (tag) {
-    store.editTag(tag, name.value);
+  if (tagToEdit.value) {
+    store.editTag(tagToEdit.value, name.value);
   } else {
     store.addTag(name.value);
   }
-  emit('close');
+  handleClose();
 }
 </script>
