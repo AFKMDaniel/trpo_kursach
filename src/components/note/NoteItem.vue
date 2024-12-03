@@ -1,9 +1,9 @@
 <template>
   <div
-    class="relative w-60 rounded-lg p-3 shadow-md"
+    class="relative w-60 break-words rounded-lg p-3 shadow-md"
     :class="{
-      '[&>div:last-child]:top-1 [&>div:last-child]:opacity-100': selected,
-      '[&>div:last-child]:top-[-4px] [&>div:last-child]:opacity-0 [&>div:last-child]:hover:top-1 [&>div:last-child]:hover:opacity-50':
+      '[&>div:last-child]:top-2 [&>div:last-child]:opacity-100': selected,
+      '[&>div:last-child]:top-[-4px] [&>div:last-child]:opacity-0 [&>div:last-child]:hover:top-2 [&>div:last-child]:hover:opacity-50':
         !selected,
     }"
     :style="{
@@ -25,7 +25,7 @@
       :class="{ 'opacity-0': !selected, 'opacity-50': selected }"
     />
     <Checkbox
-      class="absolute right-1 transition-all"
+      class="absolute right-2 transition-all"
       :model-value="selected"
       @update:model-value="onToggle"
       binary
@@ -34,22 +34,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
 import Checkbox from 'primevue/checkbox';
 
 import { Note } from './model';
-import { useSelectedNotesStore } from '@/store';
+import { useNotesStore } from '@/store';
 
-const note = defineProps<Note>();
+interface NoteProps {
+  note: Note;
+  selected: boolean;
+}
+const { note, selected } = defineProps<NoteProps>();
 
-const selected = ref(false);
-
-const { selectNote, unselectNote } = useSelectedNotesStore();
+const { selectNote, unselectNote } = useNotesStore();
 
 function onToggle() {
-  selected.value = !selected.value;
-
-  if (selected.value) {
+  if (!selected) {
     selectNote(note);
   } else {
     unselectNote(note);

@@ -1,60 +1,86 @@
 <template>
-  <TransitionGroup class="flex justify-end p-3" name="list" tag="div">
-    <Button
-      v-if="isAddVisible"
-      icon="pi pi-plus"
-      variant="text"
-      rounded
-      size="large"
-      :key="1"
-    />
-    <Button
-      v-if="isEditVisible"
-      icon="pi pi-pencil"
-      severity="warn"
-      variant="text"
-      rounded
-      size="large"
-      :key="2"
-    />
-    <Button
-      v-if="isDeleteVisible"
-      icon="pi pi-trash"
-      severity="danger"
-      variant="text"
-      rounded
-      size="large"
-      :key="3"
-      @click="isDeletePopupVisible = true"
-    />
-  </TransitionGroup>
+  <div class="flex justify-between">
+    <TransitionGroup class="p-3" tag="div" name="list">
+      <Button
+        v-if="isDeleteVisible"
+        class="rotate-45"
+        icon="pi pi-plus"
+        variant="text"
+        rounded
+        size="large"
+        severity="help"
+        @click="store.clearSelection"
+      />
+    </TransitionGroup>
+    <TransitionGroup class="flex h-fit p-3" name="list" tag="div">
+      <Button
+        v-if="isAddVisible"
+        icon="pi pi-plus"
+        variant="text"
+        rounded
+        size="large"
+        :key="1"
+        @click="isAddOrEditPopupVisible = true"
+      />
+      <Button
+        v-if="isEditVisible"
+        icon="pi pi-pencil"
+        severity="warn"
+        variant="text"
+        rounded
+        size="large"
+        :key="2"
+        @click="isAddOrEditPopupVisible = true"
+      />
+      <Button
+        v-if="isDeleteVisible"
+        icon="pi pi-trash"
+        severity="danger"
+        variant="text"
+        rounded
+        size="large"
+        :key="3"
+        @click="isDeletePopupVisible = true"
+      />
+    </TransitionGroup>
+  </div>
+
   <DeleteNotesPopup
     :visible="isDeletePopupVisible"
     @close="isDeletePopupVisible = false"
+  />
+
+  <AddOrEditPopup
+    :visible="isAddOrEditPopupVisible"
+    @close="isAddOrEditPopupVisible = false"
   />
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Button } from 'primevue';
+import { storeToRefs } from 'pinia';
+import Button from 'primevue/button';
 
-import { useSelectedNotesStore } from '@/store';
+import { useNotesStore } from '@/store';
 import DeleteNotesPopup from '../deleteNotesPopup/DeleteNotesPopup.vue';
+import AddOrEditPopup from '../addOrEditPopup/AddOrEditPopup.vue';
 
-const { selectedNotes } = useSelectedNotesStore();
+const store = useNotesStore();
+const { selectedNotes } = storeToRefs(store);
 
 const isAddVisible = computed(() => {
-  return selectedNotes.length === 0;
+  return selectedNotes.value.length === 0;
 });
 
 const isEditVisible = computed(() => {
-  return selectedNotes.length === 1;
+  return selectedNotes.value.length === 1;
 });
 
 const isDeleteVisible = computed(() => {
-  return selectedNotes.length >= 1;
+  return selectedNotes.value.length >= 1;
 });
 
+const isAddOrEditPopupVisible = ref(false);
 const isDeletePopupVisible = ref(false);
 </script>
 

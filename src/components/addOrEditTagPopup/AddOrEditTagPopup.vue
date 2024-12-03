@@ -3,12 +3,18 @@
     :visible="visible || false"
     @update:visible="emit('close')"
     modal
-    header="Удалить"
+    :header="tag ? 'Редактировать тег' : 'Добавить тег'"
     :style="{ width: '25rem' }"
   >
-    <span class="mb-8 block text-surface-500 dark:text-surface-400"
-      >Вы уверены что хотите удалить выбранные записки?</span
-    >
+    <div class="mb-4 flex items-center gap-2">
+      <label for="label" class="flex-[1] font-semibold">Название</label>
+      <InputText
+        id="label"
+        class="flex-[2]"
+        autocomplete="off"
+        v-model="name"
+      />
+    </div>
     <template #footer>
       <Button
         label="Отмена"
@@ -22,24 +28,29 @@
 </template>
 
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
-import { Dialog, Button } from 'primevue';
+import { ref } from 'vue';
+import { Dialog, Button, InputText } from 'primevue';
 
 import { useNotesStore } from '@/store';
 
 interface DeleteNotesPopupProps {
   visible: boolean;
+  tag?: string;
 }
 
-const { visible } = defineProps<DeleteNotesPopupProps>();
+const { visible, tag } = defineProps<DeleteNotesPopupProps>();
 const emit = defineEmits(['close']);
 
 const store = useNotesStore();
-const { selectedNotes } = storeToRefs(store);
+
+const name = ref(tag ?? '');
 
 function handleSubmit() {
-  selectedNotes.value.forEach((note) => store.deleteNote(note));
-  store.clearSelection();
+  if (tag) {
+    store.editTag(tag, name.value);
+  } else {
+    store.addTag(name.value);
+  }
   emit('close');
 }
 </script>
